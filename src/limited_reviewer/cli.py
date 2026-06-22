@@ -26,6 +26,8 @@ def main(argv: list[str] | None = None) -> int:
                         help="Output .pptx path (default: output/<CODE>-limited-review.pptx)")
     parser.add_argument("--format", default="PremierDraft",
                         help="17Lands format for win rates (default: PremierDraft)")
+    parser.add_argument("--max-age-days", type=float, default=1.0,
+                        help="Refetch 17Lands data older than this many days (default: 1)")
     parser.add_argument("--no-cache", action="store_true",
                         help="Bypass the on-disk caches")
     args = parser.parse_args(argv)
@@ -35,7 +37,8 @@ def main(argv: list[str] | None = None) -> int:
     chart_dir = ROOT / "output" / "charts" / code
 
     client = ScryfallClient(use_cache=not args.no_cache)
-    seventeen = SeventeenLandsClient(client.cache_dir, use_cache=not args.no_cache)
+    seventeen = SeventeenLandsClient(client.cache_dir, use_cache=not args.no_cache,
+                                     ttl_seconds=args.max_age_days * 86400)
     try:
         print(f"Fetching '{code}' from Scryfall ...")
         print(f"Fetching {args.format} win rates from 17Lands ...")

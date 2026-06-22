@@ -54,10 +54,13 @@ Scryfall codes — `FIN`, `MH3`, `BLB`, `DSK`, `OTJ`, `SOS`, ...
 |--------|-------------|
 | `-o, --output PATH` | Output file (default `output/<CODE>-limited-review.pptx`) |
 | `--format FMT` | 17Lands format for win rates (default `PremierDraft`) |
-| `--no-cache` | Ignore the on-disk caches and refetch |
+| `--max-age-days N` | Refetch 17Lands data older than N days (default `1`) |
+| `--no-cache` | Ignore all caches and refetch everything |
 
 > The first run for a set downloads card images and 17Lands data (a few MB);
-> later runs for that set are fast from `cache/`.
+> later runs are fast from `cache/`. 17Lands win rates keep moving, so cached
+> 17Lands responses older than a day are refetched automatically (tune with
+> `--max-age-days`); Scryfall card data is cached without expiry.
 
 ## What's in the deck
 

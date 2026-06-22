@@ -9,6 +9,7 @@ about for Limited card quality is GIH WR -- "games in hand win rate"
 from __future__ import annotations
 
 import json
+import time
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
@@ -24,6 +25,11 @@ HEADERS = {"User-Agent": "limited-reviewer/0.1", "Accept": "application/json"}
 # an explicit range the endpoint uses a narrow recent window and most cards come
 # back with a null win rate.
 DEFAULT_START = "2019-01-01"
+
+# 17Lands win rates keep moving (especially for new sets), so cached responses
+# are refetched once they're older than this. Card data from Scryfall is static
+# and cached without expiry.
+DEFAULT_TTL_SECONDS = 24 * 3600
 
 # Below this many GIH games the win rate is too noisy to rank on.
 MIN_RELIABLE_GAMES = 200
@@ -78,10 +84,18 @@ def _to_float(v) -> float | None:
 
 
 class SeventeenLandsClient:
-    def __init__(self, cache_dir: Path, use_cache: bool = True):
+    def __init__(self, cache_dir: Path, use_cache: bool = True,
+                 ttl_seconds: float = DEFAULT_TTL_SECONDS):
         self.cache_dir = cache_dir
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         self.use_cache = use_cache
+        self.ttl_seconds = ttl_seconds
+
+    def _fresh(self, path: Path) -> bool:
+        """A cache file counts as usable only if present and younger than the TTL."""
+        if not self.use_cache or not path.exists():
+            return False
+        return (time.time() - path.stat().st_mtime) < self.ttl_seconds
 
     def ratings(self, set_code: str, fmt: str = "PremierDraft",
                 start_date: str | None = None, end_date: str | None = None,
@@ -130,7 +144,7 @@ class SeventeenLandsClient:
     def _fetch_raw(self, url: str, cache_name: str):
         """Cached GET returning the raw decoded JSON (dict or list)."""
         cache_path = self.cache_dir / f"17lands_{cache_name}.json"
-        if self.use_cache and cache_path.exists():
+        if self._fresh(cache_path):
             return json.loads(cache_path.read_text(encoding="utf-8"))
         try:
             resp = requests.get(url, headers=HEADERS, timeout=30)
@@ -171,8 +185,10 @@ class SeventeenLandsClient:
         start = start_date or DEFAULT_START
         end = end_date or date.today().isoformat()
         tag = "_".join(f"{k}-{v}" for k, v in sorted(extra.items()))
-        cache_path = self.cache_dir / f"17lands_{kind}_{set_code.upper()}_{tag}_{start}_{end}.json"
-        if self.use_cache and cache_path.exists():
+        # 'end' is always "now", so it's not part of the key; the TTL governs
+        # freshness instead (and avoids accumulating one stale file per day).
+        cache_path = self.cache_dir / f"17lands_{kind}_{set_code.upper()}_{tag}_{start}.json"
+        if self._fresh(cache_path):
             return json.loads(cache_path.read_text(encoding="utf-8"))
         params = {"expansion": set_code.upper(), "start_date": start, "end_date": end, **extra}
         try:
