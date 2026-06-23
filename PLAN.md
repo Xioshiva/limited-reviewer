@@ -50,10 +50,11 @@ A `.pptx` deck answering:
   Every slide (except the title) has a **page number**.
 - **Chapter 1 — The Set at a Glance:** overview, color balance, mana curve,
   play/draw win rate.
-- **Chapter 2 — Archetypes:** archetype win rates (17Lands), gold-card density,
-  one slide per color pair with key commons & uncommons **ranked by the card's
-  win rate *within that archetype*** (17Lands `colors=` filter), then **pivot
-  cards** — commons/uncommons strong in 2+ archetypes.
+- **Chapter 2 — Archetypes:** the format's **main archetypes detected by play
+  rate** (any color count — 3-color archetypes like Temur appear, dead 2-color
+  pairs are dropped), with win rates, gold-card density, one slide per archetype
+  (key commons & uncommons **ranked by win rate *within that archetype***), then
+  **pivot cards** — commons/uncommons strong in 2+ archetypes.
 - **Chapter 3 — Removal & Interaction:** removal galleries (one per color, ≤5
   mana, by win rate), sweepers/wraths, combat tricks (one per color), other
   functions (burn/bounce/counters/lifegain/evasion/tutors/ramp).
@@ -82,8 +83,6 @@ on archetype slides the win rate is the card's rate **in that archetype**.
 - [x] Booster-only pool; digital cards excluded
 
 ## Possible next steps (tag ideas)
-- **Dynamic archetype detection** (by play rate, incl. 3c/5c; drop dead 2c pairs)
-  — full spec + SOS evidence in [docs/archetype-detection.md](docs/archetype-detection.md).
 - **Keyword-ability slide** (free, from card data): Flying/Deathtouch/Lifelink/…
   + set mechanics (Job select, Flashback, Surveil, Crew, Cycling).
 - **Theme tags** with data in FIN: self-mill (21), mill (27), landfall (15),

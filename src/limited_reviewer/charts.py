@@ -148,9 +148,9 @@ def archetype_chart(a: Analysis, path: Path) -> Path:
     fig, ax = plt.subplots(figsize=(8.0, 4.2))
     bars = ax.bar(pairs, vals, color=GOLD, edgecolor=EDGE, linewidth=0.8)
     _bar_labels(ax, bars, vals)
-    ax.set_ylabel("Multicolor (gold) cards")
-    ax.set_xlabel("Color pair")
-    ax.set_title("Archetype signposts — gold cards per pair")
+    ax.set_ylabel("On-color gold cards")
+    ax.set_xlabel("Archetype")
+    ax.set_title("Archetype signposts — gold cards per archetype")
     ax.margins(y=0.15)
     return _save(fig, path)
 

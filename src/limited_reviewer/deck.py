@@ -303,8 +303,8 @@ class Deck:
         if rated:
             best = max(rated, key=lambda x: x["win_rate"])
             worst = min(rated, key=lambda x: x["win_rate"])
-            lines += [f"Best pair: {best['name']}  ({best['win_rate'] * 100:.1f}%)",
-                      f"Weakest pair: {worst['name']}  ({worst['win_rate'] * 100:.1f}%)", ""]
+            lines += [f"Best archetype: {best['name']}  ({best['win_rate'] * 100:.1f}%)",
+                      f"Weakest: {worst['name']}  ({worst['win_rate'] * 100:.1f}%)", ""]
         for ar in a.color_ratings:
             if ar.is_summary and ar.win_rate is not None:
                 lines.append(f"{ar.color_name}: {ar.win_rate * 100:.1f}%")
@@ -315,8 +315,11 @@ class Deck:
     def archetype_detail_slide(self, a: Analysis, pair: str, img):
         slide = self._slide()
         ar = a.archetype_winrate(pair)
+        meta = a.archetype_meta(pair)
+        played = f" · {meta['play_rate'] * 100:.1f}% played" if meta and meta.get("play_rate") else ""
         if ar and ar.win_rate is not None:
-            head = f"{ar.color_name} — {ar.win_rate * 100:.1f}% win rate · {ar.games:,} games"
+            head = (f"{ar.color_name} — {ar.win_rate * 100:.1f}% win rate"
+                    f"{played} · {ar.games:,} games")
         else:
             head = f"{pair} — win rate n/a"
         self._heading(slide, head)

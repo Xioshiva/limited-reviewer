@@ -1,7 +1,8 @@
 # Spec: dynamic archetype detection (by play rate)
 
-Status: **not yet implemented** — design + data captured here so it can be built
-in one focused pass. Author note: requested after seeing SOS Limited.
+Status: **implemented** (`seventeenlands.select_archetypes`, wired through
+`analyze`/`cli`/`charts`/`deck`). On SOS it now surfaces Temur/Sultai/Jeskai and
+drops the dead 2-color pairs, as predicted below. Kept as the design record.
 
 ## Problem
 

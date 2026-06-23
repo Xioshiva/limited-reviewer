@@ -176,12 +176,15 @@ class Analysis:
         return r.gih_wr if r else None
 
     def _arch_sort_key(self, pair: str, card):
-        r = self.arch_rating(pair, card)
+        r = self.arch_rating(pair, card) or self.rating(card)  # fall back to overall
         if r and r.reliable:
             return (0, -r.gih_wr)
         if r and r.gih_wr is not None:
             return (1, -r.gih_wr)
         return (2, 0.0)
+
+    def archetype_meta(self, pair: str) -> dict | None:
+        return next((ar for ar in self.archetypes if ar["pair"] == pair), None)
 
     def archetype_cards(self, pair: str, rarity: str, n: int = 6) -> list[dict]:
         """Best commons/uncommons of a color pair, ranked by *in-archetype* WR.
@@ -373,11 +376,34 @@ def _removal_detail(removal_cards: list[dict]) -> dict:
     }
 
 
+def _archetypes_from_meta(cards: list[dict], meta: list[ArchetypeRating],
+                          color_ratings: list[ArchetypeRating]) -> list[dict]:
+    """Build archetype dicts from a detected (play-rate-selected) archetype list."""
+    total = sum(ar.games for ar in color_ratings
+                if not ar.is_summary and len(ar.colors) >= 2) or 1
+    out = []
+    for ar in meta:
+        cset = set(ar.colors)
+        gold = [c for c in cards if set(card_colors(c)) == cset]  # exact-color signposts
+        out.append({
+            "pair": ar.short_name,
+            "colors": ar.colors,
+            "name": ar.color_name,
+            "win_rate": ar.win_rate,
+            "games": ar.games,
+            "play_rate": ar.games / total,
+            "count": len(gold),
+            "cards": sorted(c["name"] for c in gold),
+        })
+    return out
+
+
 def analyze_set(client: ScryfallClient, code: str,
                 ratings: dict[str, CardRating] | None = None,
                 color_ratings: list[ArchetypeRating] | None = None,
                 play_draw: PlayDrawStat | None = None,
-                archetype_card_ratings: dict[str, dict[str, CardRating]] | None = None
+                archetype_card_ratings: dict[str, dict[str, CardRating]] | None = None,
+                archetypes_meta: list[ArchetypeRating] | None = None
                 ) -> Analysis:
     set_meta = client.get_set(code)
     raw = client.cards_in_set(code)
@@ -396,13 +422,19 @@ def analyze_set(client: ScryfallClient, code: str,
     color_counts, multicolor = _color_counts(cards)
     removal_cards = next(cs for cs in cat_stats if cs.key == "removal").cards
 
-    archetypes = _archetypes(cards)
-    arch_by_colors = {ar.colors: ar for ar in (color_ratings or []) if not ar.is_summary}
-    for arch in archetypes:
-        ar = arch_by_colors.get(frozenset(arch["pair"]))
-        arch["win_rate"] = ar.win_rate if ar else None
-        arch["games"] = ar.games if ar else 0
-        arch["name"] = ar.color_name if ar else arch["pair"]
+    if archetypes_meta:
+        # Dynamic: archetypes detected by play rate (any color count).
+        archetypes = _archetypes_from_meta(cards, archetypes_meta, color_ratings or [])
+    else:
+        # Fallback (no 17Lands data): the fixed 10 two-color pairs.
+        archetypes = _archetypes(cards)
+        arch_by_colors = {ar.colors: ar for ar in (color_ratings or []) if not ar.is_summary}
+        for arch in archetypes:
+            ar = arch_by_colors.get(frozenset(arch["pair"]))
+            arch["win_rate"] = ar.win_rate if ar else None
+            arch["games"] = ar.games if ar else 0
+            arch["name"] = ar.color_name if ar else arch["pair"]
+            arch["play_rate"] = None
 
     return Analysis(
         code=code.upper(),

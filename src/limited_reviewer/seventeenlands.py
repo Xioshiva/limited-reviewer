@@ -31,6 +31,12 @@ DEFAULT_START = "2019-01-01"
 # and cached without expiry.
 DEFAULT_TTL_SECONDS = 24 * 3600
 
+# Archetype detection: keep color combos drafted at least this often, regardless
+# of color count, capped at MAX (with a MIN floor so we never show too few).
+ARCHETYPE_MIN_PLAYRATE = 0.03
+ARCHETYPE_MAX = 10
+ARCHETYPE_MIN = 5
+
 # Below this many GIH games the win rate is too noisy to rank on.
 MIN_RELIABLE_GAMES = 200
 
@@ -202,3 +208,26 @@ class SeventeenLandsClient:
         if self.use_cache:
             cache_path.write_text(json.dumps(rows), encoding="utf-8")
         return rows
+
+
+def select_archetypes(color_ratings: list[ArchetypeRating],
+                      min_playrate: float = ARCHETYPE_MIN_PLAYRATE,
+                      max_archetypes: int = ARCHETYPE_MAX,
+                      min_archetypes: int = ARCHETYPE_MIN,
+                      include_mono: bool = False) -> list[ArchetypeRating]:
+    """Pick a set's main archetypes by play rate, regardless of color count.
+
+    Includes high-playrate 3-/5-color archetypes and drops barely-played 2-color
+    ones. Falls back to the most-played few if nothing clears the threshold.
+    """
+    rows = [ar for ar in color_ratings if not ar.is_summary and ar.games > 0 and ar.colors]
+    if not include_mono:
+        rows = [ar for ar in rows if len(ar.colors) >= 2]
+    if not rows:
+        return []
+    total = sum(ar.games for ar in rows)
+    rows.sort(key=lambda ar: ar.games, reverse=True)
+    selected = [ar for ar in rows if ar.games / total >= min_playrate]
+    if len(selected) < min_archetypes:
+        selected = rows[:min_archetypes]
+    return selected[:max_archetypes]

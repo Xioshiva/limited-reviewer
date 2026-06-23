@@ -13,8 +13,10 @@ py -m limited_reviewer FIN     # -> output/FIN-limited-review.pptx
 
 ## Highlights
 
-- **Archetypes** — 17Lands win rate per color pair, plus each pair's key commons
-  & uncommons ranked by their win rate *in that archetype*.
+- **Archetypes** — the format's main archetypes **detected by play rate** (any
+  color count: 3-color archetypes appear, dead 2-color pairs are dropped), with
+  17Lands win rates and each archetype's key commons & uncommons ranked by their
+  win rate *in that archetype*.
 - **Pivot cards** — commons/uncommons that are strong across 2+ archetypes.
 - **Removal & tricks** — galleries grouped by color and sorted by win rate;
   board wipes split out; removal over 5 mana excluded.
@@ -70,7 +72,7 @@ and every slide is numbered.
 | Chapter | Slides |
 |---------|--------|
 | **The Set at a Glance** | overview, color balance, mana curve, play/draw win rate |
-| **Archetypes** | archetype win rates, gold-card density, one slide per color pair (key commons & uncommons by in-archetype win rate), pivot cards |
+| **Archetypes** | main archetypes by play rate (incl. 3-color), win rates, gold-card density, one slide per archetype (key commons & uncommons by in-archetype win rate), pivot cards |
 | **Removal & Interaction** | removal by color (≤5 mana), sweepers, combat tricks by color, other functions |
 | **Draft Signals** | overrated *traps*, underrated *sleepers* |
 | **Best Cards** | top 5 commons, top 5 uncommons, top 20 overall |

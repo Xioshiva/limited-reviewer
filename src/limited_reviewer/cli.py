@@ -4,14 +4,13 @@ from __future__ import annotations
 
 import argparse
 import sys
-from itertools import combinations
 from pathlib import Path
 
 from .analyze import analyze_set
 from .debug import write_debug_csv
 from .deck import build_deck
 from .scryfall import ScryfallClient, ScryfallError
-from .seventeenlands import SeventeenLandsClient
+from .seventeenlands import SeventeenLandsClient, select_archetypes
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -45,15 +44,16 @@ def main(argv: list[str] | None = None) -> int:
         ratings = seventeen.ratings(code, args.format)
         color_ratings = seventeen.color_ratings(code, args.format)
         play_draw = seventeen.play_draw(code, args.format)
+        archetypes = select_archetypes(color_ratings)
+        if archetypes:
+            print("Main archetypes: "
+                  + ", ".join(f"{a.short_name}({a.games * 100 // sum(x.games for x in archetypes)}%)"
+                              for a in archetypes))
         print("Fetching per-archetype win rates from 17Lands ...")
-        pairs = ["".join(p) for p in combinations("WUBRG", 2)]
-        arch_ratings = {}
-        for pr in pairs:
-            r = seventeen.ratings(code, args.format, colors=pr)
-            if not r:  # 17Lands may expect the other color order
-                r = seventeen.ratings(code, args.format, colors=pr[::-1])
-            arch_ratings[pr] = r
-        analysis = analyze_set(client, code, ratings, color_ratings, play_draw, arch_ratings)
+        arch_ratings = {a.short_name: seventeen.ratings(code, args.format, colors=a.short_name)
+                        for a in archetypes}
+        analysis = analyze_set(client, code, ratings, color_ratings, play_draw,
+                               arch_ratings, archetypes)
     except ScryfallError as e:
         print(f"Scryfall error: {e}", file=sys.stderr)
         return 1
