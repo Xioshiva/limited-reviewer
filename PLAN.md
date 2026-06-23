@@ -82,6 +82,8 @@ on archetype slides the win rate is the card's rate **in that archetype**.
 - [x] Booster-only pool; digital cards excluded
 
 ## Possible next steps (tag ideas)
+- **Dynamic archetype detection** (by play rate, incl. 3c/5c; drop dead 2c pairs)
+  — full spec + SOS evidence in [docs/archetype-detection.md](docs/archetype-detection.md).
 - **Keyword-ability slide** (free, from card data): Flying/Deathtouch/Lifelink/…
   + set mechanics (Job select, Flashback, Surveil, Crew, Cycling).
 - **Theme tags** with data in FIN: self-mill (21), mill (27), landfall (15),
